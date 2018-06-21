@@ -1,0 +1,7 @@
+resolver: nightly-2018-06-21
+packages:
+- './src/h3-core'
+
+flags: {}
+
+extra-package-dbs: []
