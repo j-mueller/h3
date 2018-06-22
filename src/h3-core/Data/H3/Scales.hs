@@ -265,6 +265,18 @@ instance (
     visuals (NoGrid o) tgt = VisualElements tcks [] lbl lgd where
       VisualElements tcks _ lbl lgd = visuals o tgt
 
+data NoVisuals (f :: * -> *) a
+
+type instance Target (NoVisuals f) = Target f
+type instance TargetRange (NoVisuals f) = TargetRange f
+
+instance Scalable f a b => Scalable (NoVisuals f) a b where
+  data ScaleOptions (NoVisuals f) a b = NoVisuals ((ScaleOptions f) a b)
+  scale (NoVisuals opts) = scale opts
+
+instance Scalable f a b => ChartVisuals f a b where
+  visuals _ _ = mempty
+
 data Cartesian (f :: * -> *) (g :: * -> *) a
 
 type instance Target (Cartesian f g) = Product (Target f) (Target g)
