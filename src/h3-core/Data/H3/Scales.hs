@@ -2,6 +2,7 @@
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE RecordWildCards       #-}
+{-# LANGUAGE TupleSections         #-}
 {-# LANGUAGE TypeFamilies          #-}
 module Data.H3.Scales(
   -- * Basic scales
@@ -17,6 +18,7 @@ module Data.H3.Scales(
   ProductV,
   Product,
   Nested,
+  Cartesian,
   -- * Visuals
   NoGrid
 ) where
@@ -80,7 +82,7 @@ instance (Ord a, RealFrac a, Floating a) => ChartVisuals Continuous a a where
         DontIncludeZero -> ex
     (tcks, nfrac) = looseLabels defaultLabelCount (mn, mx)
     veTicks = runIdentity . scMap <$> NonEmpty.toList tcks
-    veGridLines = veTicks
+    veGridLines = zip veTicks veTicks
     veAxisLabels = (\n -> (scTickLabel n, runIdentity $ scMap n)) <$> NonEmpty.toList tcks
     veLegend = []
     scMap = scale opts tgt
@@ -122,7 +124,7 @@ instance (Ord a, Integral a) => ChartVisuals Cardinal a Double where
     theTicks = runIdentity . scMap <$> NonEmpty.toList tcks
     scVis = VisualElements
       theTicks
-      theTicks
+      (zip theTicks theTicks)
       ((\n -> (scTickLabel n, runIdentity $ scMap n)) <$> NonEmpty.toList tcks)
       []
     scMap = scale o tgt
@@ -262,4 +264,52 @@ instance (
   => ChartVisuals (NoGrid f) a b where
     visuals (NoGrid o) tgt = VisualElements tcks [] lbl lgd where
       VisualElements tcks _ lbl lgd = visuals o tgt
+
+data Cartesian (f :: * -> *) (g :: * -> *) a
+
+type instance Target (Cartesian f g) = Product (Target f) (Target g)
+type instance TargetRange (Cartesian f g) = Product (TargetRange f) (TargetRange g)
+
+instance (Scalable f a b, Scalable g c d) => Scalable (Cartesian f g) (a, c) (b, d) where
+  data ScaleOptions (Cartesian f g) p q =
+    CardScaleOpts
+      (ScaleOptions f (LeftV p) (LeftV q))
+      (ScaleOptions g (RightV p) (RightV q))
+  scale (CardScaleOpts fa gb) (Product (ltgt, rtgt)) = scMap where
+    fm = scale fa ltgt
+    gm = scale gb rtgt
+    scMap (a, c) = Product (fm a, gm c)
+
+instance (
+  Scalable f a b,
+  Scalable g c d,
+  ChartVisuals f a b,
+  TargetRange f ~ Extent,
+  TargetRange g ~ Extent,
+  ChartVisuals g c d)
+  => ChartVisuals (Cartesian f g) (a, c) (b, d) where
+    visuals (CardScaleOpts fo go) (Product (ltgt, rtgt)) = VisualElements t g a l where
+      VisualElements ft fg fa fl = visuals fo ltgt
+      VisualElements gt gg ga gl = visuals go rtgt
+      t = ft' ++ gt'
+      g = fg' ++ gg'
+      a = fa' ++ ga'
+      l = fl' ++ gl'
+      (minB, maxB) = toTuple ltgt
+      (minD, maxD) = toTuple rtgt
+      placeLeft = (minB,)
+      placeRight = (maxB,)
+      placeTop = (,maxD)
+      placeBottom = (,minD)
+      ft' = placeBottom <$> ft
+      gt' = fmap placeLeft gt
+      fg' = fmap (\(l', r) -> (placeBottom l', placeTop r)) fg
+      gg' = fmap (\(l', r) -> (placeLeft l', placeRight r)) gg
+      fa' = fmap placeBottom <$> fa
+      ga' = fmap placeLeft <$> ga
+      fl' = fmap placeBottom <$> fl
+      gl' = fmap placeLeft <$> gl
+
+
+
 

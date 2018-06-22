@@ -62,7 +62,7 @@ class Scalable f a b where
 --  be changed in the future to make it more flexible.
 data VisualElements s n = VisualElements {
   veTicks      :: [n], -- ^ Points in the target interval that should be indicated to the user
-  veGridLines  :: [n], -- ^ Locations of grid lines
+  veGridLines  :: [(n, n)], -- ^ Start and end points of grid lines
   veAxisLabels :: [(String, n)], -- ^ Points in the target interval that should be labelled
   veLegend     :: [Shape s n] -- ^ Additional data
 } deriving (Functor)
