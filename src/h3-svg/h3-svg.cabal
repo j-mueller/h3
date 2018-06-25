@@ -1,4 +1,4 @@
-name:          h3-core
+name:          h3-svg
 version:       0.0.1
 category:      Visualisation
 license:       MIT
@@ -10,8 +10,8 @@ bug-reports:   https://github.com/j-mueller/h3/issues
 copyright:     Copyright (C) 2018 Jann Mueller
 build-type:    Simple
 cabal-version: >= 1.10
-synopsis:      Core library for h3
-description:   This package provides the core types for h3
+synopsis:      svg-builder bindings for h3
+description:   Render shapes to SVG
 
 source-repository head
   type: git
@@ -21,17 +21,9 @@ library
   default-language: Haskell2010
   ghc-options: -Wall
   exposed-modules:
-    Data.H3,
-    Data.H3.Extent,
-    Data.H3.Scalable,
-    Data.H3.Scales,
-    Data.H3.Shape,
-    Data.H3.Utils
+    Data.H3.Svg
+  build-depends: h3-core
   build-depends:
     base,
-    containers,
-    format-numbers,
-    profunctors,
-    semigroups,
-    semigroupoids,
-    text
+    text,
+    svg-builder
