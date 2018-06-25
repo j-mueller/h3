@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveFunctor         #-}
+{-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeFamilies          #-}
 --------------------------------------------------------------------
@@ -25,11 +26,15 @@ module Data.H3.Scalable(
   TargetRange,
   -- * Visual elements
   ChartVisuals(..),
-  VisualElements(..)
+  VisualElements(..),
+  -- * Basic instances
+  arrow
 ) where
 
-import           Data.H3.Shape  (Shape)
-import           Data.Semigroup (Semigroup (..))
+import           Data.Functor.Identity (Identity (..))
+import           Data.H3.Shape         (Shape)
+import           Data.Proxy            (Proxy (..))
+import           Data.Semigroup        (Semigroup (..))
 
 -- | 'Target' @f@ is the codomain of the scale. For example, if @f@ is a scale
 --   that maps real numbers to real numbers, then 'Target' @f@ is
@@ -78,3 +83,14 @@ instance Monoid (VisualElements s n) where
 -- | The class of scales that have metadata in the form of 'VisualElements'.
 class Scalable f a b => ChartVisuals f a b where
   visuals :: (ScaleOptions f) a b -> (TargetRange f) b ->  VisualElements String b
+
+type instance Target ((->) a) = Identity
+type instance TargetRange ((->) a) = Proxy
+
+-- | Every function 'f :: a -> b' is a scale
+arrow :: (a -> b) -> ScaleOptions ((->) a) a b
+arrow = ArrScaleOpts
+
+instance Scalable ((->) a) a b where
+  data ScaleOptions ((->) a) a b = ArrScaleOpts (a -> b)
+  scale (ArrScaleOpts f) _ = Identity . f

@@ -6,6 +6,7 @@
 {-# LANGUAGE TypeFamilies          #-}
 module Data.H3.Scales(
   -- * Basic scales
+  arrow,
   -- ** Continuous (real numbers)
   continuous,
   Continuous,
@@ -48,11 +49,12 @@ import           Data.Void                (Void)
 import           Data.H3.Extent           (Extent, extent, fromTuple, toTuple)
 import           Data.H3.Scalable         (ChartVisuals (..), Scalable (..),
                                            Target, TargetRange,
-                                           VisualElements (..))
+                                           VisualElements (..), arrow)
 import           Data.H3.Shape            (Shape)
 import           Data.H3.Utils            (computeMidpoint, defaultLabelCount,
                                            linear, looseLabels)
 import           Prelude                  hiding (product)
+
 
 -- | Indicates whether to extend the source (domain) of a continuous scale to
 -- include 0.
@@ -109,6 +111,7 @@ data Cardinal a
 type instance Target Cardinal = Identity
 type instance TargetRange Cardinal = Extent
 
+-- | Create a cardinal scale (map from integers to 'Double').
 cardinal :: Extent a -> ScaleOptions Cardinal a b
 cardinal = CardScaleOptions
 
@@ -154,7 +157,12 @@ data Ordinal a
 type instance Target Ordinal = Extent
 type instance TargetRange Ordinal = Extent
 
-ordinal :: NonEmpty a -> (a -> String) -> ScaleOptions Ordinal a b
+-- | Create an ordinal scale (map from some type with an 'Ord' instance to
+--   'Extent Double').
+ordinal ::
+  NonEmpty a -- ^ The domain
+  -> (a -> String) -- ^ A description of the values (for creating labels)
+  -> ScaleOptions Ordinal a b
 ordinal = OrdScaleOptions
 
 instance (Ord a, Eq a) => Scalable Ordinal a Double where
@@ -169,7 +177,7 @@ instance (Ord a, Eq a) => Scalable Ordinal a Double where
       $ fmap (fromTuple . step) [0 ..]
     scMap av = Map.findWithDefault tgt av theMap
 
-instance (Ord a, Eq a, Show a) => ChartVisuals Ordinal a Double where
+instance (Ord a, Eq a) => ChartVisuals Ordinal a Double where
   visuals (OrdScaleOptions ex f) tgt = scVis where
     scMap = scale (OrdScaleOptions ex f) tgt
     theTicks = computeMidpoint . scMap <$> NonEmpty.toList ex
@@ -205,6 +213,7 @@ newtype Product f g a = Product (f (LeftV a), g (RightV a))
 type instance Target (Product f g) = Product (Target f) (Target g)
 type instance TargetRange (Product f g) = Product (TargetRange f) (TargetRange g)
 
+-- | The product of two scales.
 product :: ScaleOptions f a b -> ScaleOptions g c d -> ScaleOptions (Product f g) (a, c) (b, d)
 product = ProdScaleOpts
 
@@ -220,13 +229,14 @@ instance (
       gm = scale gb rtgt
       scMap (a, c) = Product (fm a, gm c)
 
--- | @Nested f g@ creates a @g@ scale within each @f@ result. This requires
---   @Target f@, @Target g@ and @TargetRange g@ to be identical.
 data Nested (f :: * -> *) (g :: * -> *) p
 
 type instance Target (Nested f g) = (Target f)
 type instance TargetRange (Nested f g) = TargetRange f
 
+-- | 'nested' takes two scales @g@ and @f@ and creates a @g@ scale within each
+--   @f@ result. This requires 'Target f', @Target g@ and @TargetRange g@ to be
+--  identical.
 nested :: ScaleOptions f a b -> ScaleOptions g c b -> ScaleOptions (Nested f g) (a, c) b
 nested = NestScaleOpts
 
@@ -260,6 +270,7 @@ data Transformed (f :: * -> *) a
 type instance Target (Transformed f) = Target f
 type instance TargetRange (Transformed f) = TargetRange f
 
+-- | Map the results of a scale monomorphically.
 transformed :: (Target f b -> Target f b) -> (ScaleOptions f) a b -> ScaleOptions (Transformed f) a b
 transformed = TransformedOpts
 
