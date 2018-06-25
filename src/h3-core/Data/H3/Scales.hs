@@ -7,22 +7,33 @@
 module Data.H3.Scales(
   -- * Basic scales
   -- ** Continuous (real numbers)
-  continuousScale,
+  continuous,
   Continuous,
   IncludeZeroPolicy(..),
   -- ** Cardinal (integers)
+  cardinal,
   Cardinal,
   -- ** Ordinal (Ord a)
+  ordinal,
   Ordinal,
   -- * Combinators
   ProductV,
+  product,
   Product,
+  nested,
   Nested,
+  transformed,
+  Transformed,
+  cartesian,
   Cartesian,
   -- * Visuals
-  NoGrid
+  noGrid,
+  NoGrid,
+  noVisuals,
+  NoVisuals
 ) where
 
+import           Data.Bifunctor           (Bifunctor (..))
 import           Data.Functor.Identity    (Identity (..))
 import           Data.List.NonEmpty       (NonEmpty)
 import qualified Data.List.NonEmpty       as NonEmpty
@@ -41,6 +52,7 @@ import           Data.H3.Scalable         (ChartVisuals (..), Scalable (..),
 import           Data.H3.Shape            (Shape)
 import           Data.H3.Utils            (computeMidpoint, defaultLabelCount,
                                            linear, looseLabels)
+import           Prelude                  hiding (product)
 
 -- | Indicates whether to extend the source (domain) of a continuous scale to
 -- include 0.
@@ -56,11 +68,11 @@ type instance Target Continuous = Identity
 type instance TargetRange Continuous = Extent
 
 -- | Create a continuous scale (map between real numbers).
-continuousScale ::
+continuous ::
   Extent a -- ^ The source range
   -> IncludeZeroPolicy -- ^ Whether to extend the source range to include 0
   -> ScaleOptions Continuous a b
-continuousScale = ContScale
+continuous = ContScale
 
 instance (Ord a, RealFrac a, Floating a) => Scalable Continuous a a where
   data ScaleOptions Continuous a b = ContScale (Extent a) IncludeZeroPolicy
@@ -96,6 +108,9 @@ data Cardinal a
 
 type instance Target Cardinal = Identity
 type instance TargetRange Cardinal = Extent
+
+cardinal :: Extent a -> ScaleOptions Cardinal a b
+cardinal = CardScaleOptions
 
 mkDouble :: Integral a => a -> Double
 mkDouble = fromIntegral
@@ -138,6 +153,9 @@ data Ordinal a
 
 type instance Target Ordinal = Extent
 type instance TargetRange Ordinal = Extent
+
+ordinal :: NonEmpty a -> (a -> String) -> ScaleOptions Ordinal a b
+ordinal = OrdScaleOptions
 
 instance (Ord a, Eq a) => Scalable Ordinal a Double where
   data ScaleOptions Ordinal a b = OrdScaleOptions (NonEmpty a) (a -> String)
@@ -187,6 +205,9 @@ newtype Product f g a = Product (f (LeftV a), g (RightV a))
 type instance Target (Product f g) = Product (Target f) (Target g)
 type instance TargetRange (Product f g) = Product (TargetRange f) (TargetRange g)
 
+product :: ScaleOptions f a b -> ScaleOptions g c d -> ScaleOptions (Product f g) (a, c) (b, d)
+product = ProdScaleOpts
+
 instance (
   Scalable f a b,
   Scalable g c d) => Scalable (Product f g) (a, c) (b, d) where
@@ -205,6 +226,9 @@ data Nested (f :: * -> *) (g :: * -> *) p
 
 type instance Target (Nested f g) = (Target f)
 type instance TargetRange (Nested f g) = TargetRange f
+
+nested :: ScaleOptions f a b -> ScaleOptions g c b -> ScaleOptions (Nested f g) (a, c) b
+nested = NestScaleOpts
 
 instance (
   Target g ~ TargetRange g,
@@ -236,6 +260,9 @@ data Transformed (f :: * -> *) a
 type instance Target (Transformed f) = Target f
 type instance TargetRange (Transformed f) = TargetRange f
 
+transformed :: (Target f b -> Target f b) -> (ScaleOptions f) a b -> ScaleOptions (Transformed f) a b
+transformed = TransformedOpts
+
 instance (
   Functor (Target f),
   Scalable f a b) => Scalable (Transformed f) a b where
@@ -254,6 +281,9 @@ data NoGrid (f :: * -> *) a
 type instance Target (NoGrid f) = Target f
 type instance TargetRange (NoGrid f) = TargetRange f
 
+noGrid :: ScaleOptions f a b -> ScaleOptions (NoGrid f) a b
+noGrid = NoGrid
+
 instance Scalable f a b => Scalable (NoGrid f) a b where
   data ScaleOptions (NoGrid f) a b = NoGrid ((ScaleOptions f) a b)
   scale (NoGrid opts) = scale opts
@@ -270,17 +300,23 @@ data NoVisuals (f :: * -> *) a
 type instance Target (NoVisuals f) = Target f
 type instance TargetRange (NoVisuals f) = TargetRange f
 
+noVisuals :: ScaleOptions f a b -> ScaleOptions (NoVisuals f) a b
+noVisuals = NoVisuals
+
 instance Scalable f a b => Scalable (NoVisuals f) a b where
   data ScaleOptions (NoVisuals f) a b = NoVisuals ((ScaleOptions f) a b)
   scale (NoVisuals opts) = scale opts
 
-instance Scalable f a b => ChartVisuals f a b where
+instance Scalable f a b => ChartVisuals (NoVisuals f) a b where
   visuals _ _ = mempty
 
 data Cartesian (f :: * -> *) (g :: * -> *) a
 
 type instance Target (Cartesian f g) = Product (Target f) (Target g)
 type instance TargetRange (Cartesian f g) = Product (TargetRange f) (TargetRange g)
+
+cartesian :: ScaleOptions f a b -> ScaleOptions g c d -> ScaleOptions (Cartesian f g) (a, c) (b, d)
+cartesian = CardScaleOpts
 
 instance (Scalable f a b, Scalable g c d) => Scalable (Cartesian f g) (a, c) (b, d) where
   data ScaleOptions (Cartesian f g) p q =
@@ -314,9 +350,9 @@ instance (
       placeTop = (,maxD)
       placeBottom = (,minD)
       ft' = placeBottom <$> ft
-      gt' = fmap placeLeft gt
-      fg' = fmap (\(l', r) -> (placeBottom l', placeTop r)) fg
-      gg' = fmap (\(l', r) -> (placeLeft l', placeRight r)) gg
+      gt' = placeLeft <$> gt
+      fg' = bimap placeBottom placeTop <$> fg
+      gg' = bimap placeLeft placeRight <$> gg
       fa' = fmap placeBottom <$> fa
       ga' = fmap placeLeft <$> ga
       fl' = fmap placeBottom <$> fl
