@@ -4,21 +4,37 @@
 {-# LANGUAGE RecordWildCards       #-}
 {-# LANGUAGE TupleSections         #-}
 {-# LANGUAGE TypeFamilies          #-}
+--------------------------------------------------------------------
+-- |
+-- Copyright : (c) Jann Müller 2018
+-- License   :  MIT
+-- Maintainer:  Jann Müller <j.mueller.11@alumni.ucl.ac.uk>
+-- Stability :  experimental
+-- Portability: non-portable
+--
+-- A set of useful scales for visualising data. Each scale is identified by an
+-- empty data type ('Continuous', 'Ordinal' etc). To use a scale @f@ to map
+-- @a@s to @b@s you need to construct a value of @ScaleOptions f a b@. To
+-- make this easier, a constructor such as 'continuous', 'ordinal', etc.  is
+-- provided for each scale.
+--
+--
+-- Scales can be combined in a number of ways, just like to ordinary functions.
+-- For example, we can take the 'Product' of any two scales @f@ and @g@.
+-- The 'ScaleOptions' of combined scales are usually functions of the
+-- 'ScaleOptions' of their components, and can be constructed in the same way.
+--------------------------------------------------------------------
 module Data.H3.Scales(
   -- * Basic scales
   arrow,
-  -- ** Continuous (real numbers)
   continuous,
   Continuous,
   IncludeZeroPolicy(..),
-  -- ** Cardinal (integers)
   cardinal,
   Cardinal,
-  -- ** Ordinal (Ord a)
   ordinal,
   Ordinal,
   -- * Combinators
-  ProductV,
   product,
   Product,
   nested,
@@ -27,6 +43,7 @@ module Data.H3.Scales(
   Transformed,
   cartesian,
   Cartesian,
+  ProductV,
   -- * Visuals
   noGrid,
   NoGrid,

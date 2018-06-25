@@ -16,7 +16,7 @@
 -- scale.
 --
 -- In @h3@, 'Scalable' is the type class that represents scales.
--- In visualisation commonly have metadata such as legends, grid
+-- Scales used for visualisation commonly have metadata such as legends, grid
 -- lines etc. The 'ChartVisuals' class deals with this kind of data.
 --------------------------------------------------------------------
 module Data.H3.Scalable(
