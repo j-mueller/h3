@@ -1,9 +1,21 @@
 resolver: nightly-2018-06-21
 packages:
 - './src/h3-core'
+- './src/h3-concur-react'
 - './src/h3-colour'
 - './src/h3-svg'
 
 flags: {}
 
 extra-package-dbs: []
+
+extra-deps:
+
+- ghcjs-base-stub-0.2.0.0
+
+# concur not currently on hackage
+- git: git@github.com:j-mueller/concur.git
+  commit: 71ea66eb338425965edfdd65eb10c5a1fb833149
+  subdirs:
+  - concur-core
+  - concur-react

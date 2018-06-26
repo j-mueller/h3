@@ -1,0 +1,36 @@
+name:          h3-concur-react
+version:       0.0.1
+category:      Visualisation
+license:       MIT
+author:        Jann Mueller
+maintainer:    Jann Mueller (j.mueller.11@alumni.ucl.ac.uk)
+stability:     provisional
+homepage:      https://github.com/j-mueller/h3
+bug-reports:   https://github.com/j-mueller/h3/issues
+copyright:     Copyright (C) 2018 Jann Mueller
+build-type:    Simple
+cabal-version: >= 1.10
+synopsis:      concur-react bindings for h3
+description:   concur-react bindings for h3
+
+source-repository head
+  type: git
+  location: git@github.com:j-mueller/h3.git
+
+library
+  default-language: Haskell2010
+  ghc-options: -Wall
+  exposed-modules:
+    Data.H3.Concur
+  build-depends: h3-core
+  build-depends:
+    base,
+    concur-core,
+    concur-react
+  if impl(ghcjs -any)
+    build-depends:
+          ghcjs-prim
+        , ghcjs-base
+  else
+    build-depends:
+        ghcjs-base-stub >=0.1
