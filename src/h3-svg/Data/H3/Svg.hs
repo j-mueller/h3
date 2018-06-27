@@ -17,8 +17,8 @@ module Data.H3.Svg(
   ) where
 
 import           Data.Bifunctor    (Bifunctor (..))
-import           Data.H3.Extent    (toTuple)
-import           Data.H3.Shape
+import           Data.H3.Extent    (Extent, toTuple)
+import           Data.H3.Visuals
 import           Data.String       (IsString (..))
 import           Data.Text         (Text)
 import qualified Data.Text         as Text
@@ -66,7 +66,7 @@ renderShape = go "black" "1.0" . fmap (bimap (Path.toText . getPixel) (Path.toTe
     AnOpacity opa sh -> go color (Text.pack $ show opa) sh
 
 -- | Render a shape to an SVG document using the provided dimensions
-renderSvg :: ((Pixel Double, Pixel Double) -> Shape Text (Pixel Double, Pixel Double)) -> (Pixel Double, Pixel Double) -> Element
+renderSvg :: ((Extent Double, Extent Double) -> Shape Text (Pixel Double, Pixel Double)) -> (Extent Double, Extent Double) -> Element
 renderSvg f dims = doctype <> with (svg11_ content) [Version_ <<- "1.1"] where
   content = renderShape $ f dims
   -- TODO: Viewport / width + height

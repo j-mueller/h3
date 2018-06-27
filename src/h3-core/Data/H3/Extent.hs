@@ -9,7 +9,8 @@ module Data.H3.Extent(
   _Extent,
   extent,
   toTuple,
-  fromTuple
+  fromTuple,
+  resize
   ) where
 
 import           Data.Profunctor         (Profunctor (..))
@@ -34,3 +35,11 @@ toTuple (Extent (Min l, Max r)) = (l, r)
 
 fromTuple :: (a, a) -> Extent a
 fromTuple (l, r) = Extent (Min l, Max r)
+
+-- | Change the size of an [[Extent]] symmetrically
+resize :: (Fractional a, Num a) => a -> Extent a -> Extent a
+resize factor (Extent (Min mn, Max mx)) = Extent (Min mn', Max mx') where
+  range = mx - mn
+  change = ((range * factor) - range) / 2
+  mn' = mn - change
+  mx' = mx + change

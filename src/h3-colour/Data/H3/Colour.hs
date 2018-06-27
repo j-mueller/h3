@@ -30,13 +30,9 @@ import           Data.Colour.SRGB              (sRGB24show)
 import           Data.Functor.Identity         (Identity (..))
 import           Data.H3.Scalable
 import qualified Data.Map                      as Map
-import           Data.Proxy                    (Proxy (..))
 import           GHC.Generics                  (Generic)
 
 data OrdinalColours a
-
-type instance Target OrdinalColours = Identity
-type instance TargetRange OrdinalColours = Proxy
 
 -- | Create a scale that maps discrete values to colours. Colours will repeat
 --   if there are more than 12 different values.
@@ -44,7 +40,9 @@ ordinalColours :: [a] -> ScaleOptions OrdinalColours a (Colour Double)
 ordinalColours = flip OrdColourScaleOptions black
 
 instance (Ord a, Eq a) => Scalable OrdinalColours a (Colour Double) where
-  data ScaleOptions OrdinalColours a b =
+  type Target OrdinalColours = Identity
+  type TargetRange OrdinalColours (Colour Double) = ()
+  data ScaleOptions OrdinalColours a (Colour Double) =
     OrdColourScaleOptions
       [a]
       (Colour Double)
@@ -70,7 +68,7 @@ paletteFor pt i = brewerSet cat i' where
   (cat, i') = case pt of
     Sequential  -> (Greens, clamp (3, 9) i)
     Diverging   -> (PiYG, clamp (3, 11) i)
-    Qualitative -> (Paired, clamp (3, 12) i)
+    Qualitative -> (Dark2, clamp (3, 8) i)
   clamp (mn, mx) n = max mn (min mx n)
 
 -- | Convert a colour to hexadecimal form so that it can be used in style

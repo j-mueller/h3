@@ -22,7 +22,7 @@ import           Concur.React
 import           Control.Applicative (Alternative (..))
 import           Data.Bifunctor      (Bifunctor (..))
 import           Data.H3.Extent      (toTuple)
-import           Data.H3.Shape       (FontSize (..), FontWeight (..),
+import           Data.H3.Visuals     (FontSize (..), FontWeight (..),
                                       Pixel (..), Shape (..), TextAnchor (..))
 import           Data.List           (intersperse)
 import           Data.String         (IsString (..))
