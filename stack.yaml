@@ -4,6 +4,7 @@ packages:
 - './src/h3-concur-react'
 - './src/h3-colour'
 - './src/h3-examples'  
+- './src/h3-geo'
 - './src/h3-svg'
 
 flags: {}
@@ -13,6 +14,10 @@ extra-package-dbs: []
 extra-deps:
 
 - ghcjs-base-stub-0.2.0.0
+
+# readshp on hackage requires base <4.9
+- git: git@github.com:j-mueller/readshp.git
+  commit: 6a09e93e584db96b60b62d560a503dad7f512e29
 
 # concur not currently on hackage
 - git: git@github.com:j-mueller/concur.git

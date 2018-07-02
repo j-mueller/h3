@@ -1,4 +1,4 @@
-name:          h3-examples
+name:          h3-geo
 version:       0.0.1
 category:      Visualisation
 license:       MIT
@@ -10,8 +10,8 @@ bug-reports:   https://github.com/j-mueller/h3/issues
 copyright:     Copyright (C) 2018 Jann Mueller
 build-type:    Simple
 cabal-version: >= 1.10
-synopsis:      h3 examples
-description:   h3 examples
+synopsis:      Read shapefiles and project geometric shapes with h3
+description:   This library implements geometric projects using the 'Data.H3.Scalable.Scalable' type class. Conveniences for reading shapefiles are also provided.
 
 source-repository head
   type: git
@@ -21,12 +21,16 @@ library
   default-language: Haskell2010
   ghc-options: -Wall
   exposed-modules:
-    Data.H3.Examples.BarChart,
-    Data.H3.Examples.Map
-  build-depends: h3-core, h3-colour, h3-svg, h3-geo
+    Data.H3.Geo,
+    Data.H3.Geo.Projection,
+    Data.H3.Geo.Shapefile,
+    Data.H3.Geo.Types
+  build-depends: h3-core
   build-depends:
     base,
-    lens,
+    directory,
+    filepath,
+    profunctors,
+    readshp,
     semigroupoids,
-    svg-builder,
-    text
+    semigroups
