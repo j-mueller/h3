@@ -35,7 +35,7 @@ class Scalable (f :: * -> *) a b where
   -- | 'Target' @f@ is the codomain of the scale. For example, if @f@ is a scale
   --   that maps real numbers to real numbers, then 'Target' @f@ is
   --   'Data.Functor.Identity' (a point). If it is an ordinal scale, then
-  -- 'Target' @f@ is 'Data.H3.Extent' (an interval).
+  -- 'Target' @f@ is 'Data.H3.Extent.Extent' (an interval).
   type Target f :: * -> *
 
   -- | 'TargetRange' @f@ is the type of the range parameter of the scale. For
