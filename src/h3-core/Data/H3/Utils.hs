@@ -5,12 +5,16 @@ module Data.H3.Utils(
   RoundingMode(..),
   nicenum,
   linear,
-  computeMidpoint
+  computeMidpoint,
+  viewBox
   ) where
 
 import           Data.List.NonEmpty      (NonEmpty (..))
-import           Data.Semigroup          (Sum (..))
+import           Data.Semigroup          (Max (..), Min (..), Sum (..))
 import           Data.Semigroup.Foldable
+import           Data.String             (IsString (..))
+
+import           Data.H3.Extent          (Extent (..))
 
 -- | How many labels to generate
 newtype LabelCount = LabelCount Integer
@@ -65,3 +69,22 @@ computeMidpoint :: (Fractional x, Num x, Foldable1 f) => f x -> x
 computeMidpoint f = total / count where
   (Sum total, Sum count) = foldMap1 cnt f
   cnt x = (Sum x, Sum 1)
+
+-- | Generate a value for an SVG "viewBox" attribute based on the extents of the
+--   x- and y-axis. The viewbox will be 30% bigger than the dimensions tó leave
+--  room for labels etc.
+viewBox :: (IsString s)
+  => Extent Double -- extent of the x axis
+  -> Extent Double -- extent of the y axis
+  -> s
+viewBox mx my = fromString $
+  show (minVal - 0.15 * range) <> " " <> show (-0.15 * height) <> " " <>
+  show (1.3 * range) <>
+  " " <>
+  show (1.3 * height)
+  where
+    (Extent (Min by, Max ty)) = my
+    (Extent (Min bx, Max tx)) = mx
+    height = abs $ ty - by
+    range = abs $ tx - bx
+    minVal = bx
