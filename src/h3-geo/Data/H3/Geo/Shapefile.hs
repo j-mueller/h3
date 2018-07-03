@@ -2,8 +2,8 @@
 {-# LANGUAGE RecordWildCards #-}
 module Data.H3.Geo.Shapefile where
 
-import           Data.H3.Geo.Types              (Point (..), Polygon (..),
-                                                 WGS84 (..))
+import           Data.H3.Geo.Types              (Degrees (..), Point (..),
+                                                 Polygon (..), WGS84 (..))
 
 import           Data.List.NonEmpty             (NonEmpty, nonEmpty)
 import           Data.Maybe                     (catMaybes, fromMaybe)
@@ -33,7 +33,7 @@ toShape =  maybe (Left "empty shpRecContents") mkShape . shpRecContents
 
 mkShape :: RecContents -> Either String (NonEmpty (Polygon WGS84))
 mkShape =
-  let f = maybe (Left "No polygon found") (Right . fmap Polygon) . nonEmpty . catMaybes . fmap (nonEmpty . fmap (WGS84 . Point))  in
+  let f = maybe (Left "No polygon found") (Right . fmap Polygon) . nonEmpty . catMaybes . fmap (nonEmpty . fmap (WGS84 . fmap Degrees . Point))  in
   \case
     RecPolygon{..}   -> f recPolPoints
     RecPolygonM {..} -> f recPolMPoints

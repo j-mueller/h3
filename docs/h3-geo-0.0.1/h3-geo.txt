@@ -24,15 +24,44 @@ Polygon :: NonEmpty a -> Polygon a
 -- | Polygon iso
 _Polygon :: forall p f a b. (Profunctor p, Functor f) => p (Polygon a) (f (Polygon b)) -> p (NonEmpty a) (f (NonEmpty b))
 newtype WGS84
-WGS84 :: Point Double -> WGS84
-[getWGS84] :: WGS84 -> Point Double
+WGS84 :: Point Degrees -> WGS84
+[getWGS84] :: WGS84 -> Point Degrees
 
 -- | Point in WGS84 format
-_WGS84 :: forall p f. (Profunctor p, Functor f) => p WGS84 (f WGS84) -> p (Point Double) (f (Point Double))
+_WGS84 :: forall p f. (Profunctor p, Functor f) => p WGS84 (f WGS84) -> p (Point Degrees) (f (Point Degrees))
+newtype Radians
+Radians :: Double -> Radians
+[getRadians] :: Radians -> Double
+
+-- | Angle in radians
+_Radians :: forall p f. (Profunctor p, Functor f) => p Radians (f Radians) -> p Double (f Double)
+newtype Degrees
+Degrees :: Double -> Degrees
+[getDegrees] :: Degrees -> Double
+
+-- | Angle in degrees
+_Degrees :: forall p f. (Profunctor p, Functor f) => p Degrees (f Degrees) -> p Double (f Double)
+_DegRad :: forall p f. (Profunctor p, Functor f) => p Degrees (f Degrees) -> p Radians (f Radians)
+fromRad :: Radians -> Degrees
+toRad :: Degrees -> Radians
 instance GHC.Generics.Generic Data.H3.Geo.Types.WGS84
 instance GHC.Show.Show Data.H3.Geo.Types.WGS84
 instance GHC.Classes.Ord Data.H3.Geo.Types.WGS84
 instance GHC.Classes.Eq Data.H3.Geo.Types.WGS84
+instance GHC.Float.Floating Data.H3.Geo.Types.Degrees
+instance GHC.Real.Fractional Data.H3.Geo.Types.Degrees
+instance GHC.Num.Num Data.H3.Geo.Types.Degrees
+instance GHC.Generics.Generic Data.H3.Geo.Types.Degrees
+instance GHC.Show.Show Data.H3.Geo.Types.Degrees
+instance GHC.Classes.Ord Data.H3.Geo.Types.Degrees
+instance GHC.Classes.Eq Data.H3.Geo.Types.Degrees
+instance GHC.Float.Floating Data.H3.Geo.Types.Radians
+instance GHC.Real.Fractional Data.H3.Geo.Types.Radians
+instance GHC.Num.Num Data.H3.Geo.Types.Radians
+instance GHC.Generics.Generic Data.H3.Geo.Types.Radians
+instance GHC.Show.Show Data.H3.Geo.Types.Radians
+instance GHC.Classes.Ord Data.H3.Geo.Types.Radians
+instance GHC.Classes.Eq Data.H3.Geo.Types.Radians
 instance Data.Semigroup.Foldable.Class.Foldable1 Data.H3.Geo.Types.Polygon
 instance Data.Foldable.Foldable Data.H3.Geo.Types.Polygon
 instance GHC.Base.Functor Data.H3.Geo.Types.Polygon
@@ -64,12 +93,12 @@ data Mercator a
 
 -- | Construct a mercator projection that maps the given "rectangle" of
 --   coordinates to the target rectangle
-mercator :: (WGS84, WGS84) -> NullMeridian -> ScaleOptions Mercator WGS84 (Double, Double)
+mercator :: (Point Radians, Point Radians) -> NullMeridian -> ScaleOptions Mercator (Point Radians) (Double, Double)
 
 -- | Null meridian used for mercator projection (in degrees)
 newtype NullMeridian
-NullMeridian :: Double -> NullMeridian
-[getNullMeridian] :: NullMeridian -> Double
+NullMeridian :: Degrees -> NullMeridian
+[getNullMeridian] :: NullMeridian -> Degrees
 
 -- | <pre>
 --   greenwich = NullMeridian 0
@@ -77,6 +106,6 @@ NullMeridian :: Double -> NullMeridian
 greenwich :: NullMeridian
 
 -- | Additional parameters for the scale (other than target range).
-instance Data.H3.Scalable.Scalable Data.H3.Geo.Projection.Mercator Data.H3.Geo.Types.WGS84 (GHC.Types.Double, GHC.Types.Double)
+instance Data.H3.Scalable.Scalable Data.H3.Geo.Projection.Mercator (Data.H3.Geo.Types.Point Data.H3.Geo.Types.Radians) (GHC.Types.Double, GHC.Types.Double)
 
 module Data.H3.Geo

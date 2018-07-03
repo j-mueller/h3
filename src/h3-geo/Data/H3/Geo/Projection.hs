@@ -27,46 +27,46 @@ import           Data.Functor.Identity (Identity (..))
 import           Data.Profunctor       (Profunctor (..))
 
 import           Data.H3.Extent        (Extent (..), toTuple)
-import           Data.H3.Geo.Types     (Point (..), WGS84 (..))
+import           Data.H3.Geo.Types     (Degrees (..), Point (..), Radians (..),
+                                        toRad)
 import           Data.H3.Scalable      (Scalable (..))
 import           Data.H3.Utils         (linear)
 
 data Mercator a
 
 -- | Null meridian used for mercator projection (in degrees)
-newtype NullMeridian = NullMeridian { getNullMeridian :: Double }
+newtype NullMeridian = NullMeridian { getNullMeridian :: Degrees }
 
 -- | > greenwich = NullMeridian 0
 greenwich :: NullMeridian
 greenwich = NullMeridian 0
 
--- | @Iso@ 'NullMeridian' 'Double'
-_NullMeridian :: forall p f. (Profunctor p, Functor f) => p NullMeridian (f NullMeridian) -> p Double (f Double)
+-- | @Iso@ 'NullMeridian' 'Degrees'
+_NullMeridian :: forall p f. (Profunctor p, Functor f) => p NullMeridian (f NullMeridian) -> p Degrees (f Degrees)
 _NullMeridian = dimap NullMeridian (fmap getNullMeridian)
 
 -- | Construct a mercator projection that maps the given "rectangle" of
 --   coordinates to the target rectangle
-mercator :: (WGS84, WGS84) -> NullMeridian -> ScaleOptions Mercator WGS84 (Double, Double)
+mercator :: (Point Radians, Point Radians) -> NullMeridian -> ScaleOptions Mercator (Point Radians) (Double, Double)
 mercator = MercScale
 
-instance Scalable Mercator WGS84 (Double, Double) where
+instance Scalable Mercator (Point Radians) (Double, Double) where
   type Target Mercator = Identity
   type TargetRange Mercator (Double, Double) = (Extent Double, Extent Double)
-  data ScaleOptions Mercator WGS84 (Double, Double) = MercScale (WGS84, WGS84) NullMeridian
+  data ScaleOptions Mercator (Point Radians) (Double, Double) =
+    MercScale
+      (Point Radians, Point Radians)
+      NullMeridian
   scale (MercScale ex (NullMeridian mrd)) tgt x = Identity (xScale lng', yScale lt') where
-    mrd' = rad mrd
+    mrd' = toRad mrd
     ((minLong', minLat'), (maxLong', maxLat')) =
-      bimap (proj . bimap rad rad . getPoint . getWGS84) (proj . bimap rad rad . getPoint . getWGS84) ex
+      bimap proj proj ex
     ((minX, maxX), (minY, maxY)) =
       bimap toTuple toTuple tgt
-    (lng', lt') = proj $ bimap rad rad $ getPoint $ getWGS84 x
+    (lng', lt') = proj x
     xScale = linear (minLong', maxLong') (minX, maxX)
     yScale = linear (minLat', maxLat') (minY, maxY)
 
     -- mercator projection
-    proj (long, lat) = (long - mrd', asinh $ tan lat)
-
-
--- | Convert a `Double` from degrees to radians.
-rad :: Double -> Double
-rad d = d * pi / 180
+    proj :: Point Radians -> (Double, Double)
+    proj (Point (long, lat)) = bimap getRadians getRadians (long - mrd', asinh $ tan lat)

@@ -30,4 +30,4 @@ instance GHC.Classes.Eq Data.H3.Examples.BarChart.Bar
 
 module Data.H3.Examples.Map
 mapExample :: IO ()
-hlp :: (Extent Double, Extent Double) -> Extent WGS84
+hlp :: (Extent Radians, Extent Radians) -> (Point Radians, Point Radians)
