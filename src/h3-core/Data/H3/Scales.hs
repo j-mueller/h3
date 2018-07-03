@@ -42,6 +42,8 @@ module Data.H3.Scales(
   Transformed,
   anchored,
   Anchored,
+  split,
+  Split,
   Pair(..),
   ProductV,
   -- * Data family instance constructors
@@ -242,4 +244,22 @@ instance (
       let f = scale opts tgt in
         Compose $ curry Pair <$> f anch <*> f x
 
+-- | Apply two scales to the same value
+split :: ScaleOptions f a b -> ScaleOptions g a c -> ScaleOptions (Split f g) a (b, c)
+split = SplitScaleOpts
 
+data Split (f :: * -> *) (g :: * -> *) a
+
+instance (
+  Scalable f a b,
+  Scalable g a c
+  ) => Scalable (Split f g) a (b, c) where
+    type Target (Split f g) = Product (Target f) (Target g)
+    type TargetRange (Split f g) (b, c) = (TargetRange f b, TargetRange g c)
+    data ScaleOptions (Split f g) a (b, c) = SplitScaleOpts
+      (ScaleOptions f a b)
+      (ScaleOptions g a c)
+    scale (SplitScaleOpts fa ga) (ltgt, rtgt) = scMap where
+      fm = scale fa ltgt
+      gm = scale ga rtgt
+      scMap a = Product (fm a, gm a)
