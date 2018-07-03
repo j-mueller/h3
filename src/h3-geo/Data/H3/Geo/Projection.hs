@@ -1,4 +1,5 @@
 {-# LANGUAGE ExplicitForAll        #-}
+{-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeFamilies          #-}
@@ -21,6 +22,9 @@ module Data.H3.Geo.Projection(
   Albers,
   albers,
   albers',
+  -- * Combinators
+  MapScale,
+  mapScale,
   -- * Data constructors
   ScaleOptions(..)
   ) where
@@ -48,27 +52,17 @@ greenwich = NullMeridian 0
 _NullMeridian :: forall p f. (Profunctor p, Functor f) => p NullMeridian (f NullMeridian) -> p Degrees (f Degrees)
 _NullMeridian = dimap NullMeridian (fmap getNullMeridian)
 
--- | Construct a mercator projection that maps the given "rectangle" of
---   coordinates to the target rectangle
-mercator :: (Point Radians, Point Radians) -> NullMeridian -> ScaleOptions Mercator (Point Radians) (Double, Double)
+-- | Construct a mercator projection from a null meridian
+mercator :: NullMeridian -> ScaleOptions Mercator (Point Radians) (Double, Double)
 mercator = MercScale
 
 instance Scalable Mercator (Point Radians) (Double, Double) where
   type Target Mercator = Identity
-  type TargetRange Mercator (Double, Double) = (Extent Double, Extent Double)
+  type TargetRange Mercator (Double, Double) = ()
   data ScaleOptions Mercator (Point Radians) (Double, Double) =
-    MercScale
-      (Point Radians, Point Radians)
-      NullMeridian
-  scale (MercScale ex (NullMeridian mrd)) tgt x = Identity (xScale lng', yScale lt') where
+    MercScale NullMeridian
+  scale (MercScale (NullMeridian mrd)) _ = Identity . proj where
     mrd' = toRad mrd
-    ((minLong', minLat'), (maxLong', maxLat')) =
-      bimap proj proj ex
-    ((minX, maxX), (minY, maxY)) =
-      bimap toTuple toTuple tgt
-    (lng', lt') = proj x
-    xScale = linear (minLong', maxLong') (minX, maxX)
-    yScale = linear (minLat', maxLat') (minY, maxY)
 
     -- mercator projection
     proj :: Point Radians -> (Double, Double)
@@ -78,8 +72,7 @@ instance Scalable Mercator (Point Radians) (Double, Double) where
 -- Sensible values for first and second standard parallels are
 -- 20°N/50°N or 15°N/45°N
 albers ::
-     (Point Radians, Point Radians)  -- ^ Area that should be mapped to the target area
-  -> Point Radians -- ^ Reference point
+     Point Radians -- ^ Reference point
   -> Radians -- ^ First standard parallel
   -> Radians -- ^ Second standard parallel
   -> ScaleOptions Albers (Point Radians) (Double, Double)
@@ -88,32 +81,22 @@ albers = AlbScale
 -- | Albers projection (https://en.wikipedia.org/wiki/Albers_projection) using
 --   15 and 45 degrees for the standard parallels.
 albers' ::
-     (Point Radians, Point Radians)  -- ^ Area that should be mapped to the target area
-  -> Point Radians -- ^ Reference point
+    Point Radians -- ^ Reference point
   -> ScaleOptions Albers (Point Radians) (Double, Double)
-albers' a b = AlbScale a b (toRad 15) (toRad 45)
+albers' b = AlbScale b (toRad 15) (toRad 45)
 
 data Albers a
 
 instance Scalable Albers (Point Radians) (Double, Double) where
   type Target Albers = Identity
-  type TargetRange Albers (Double, Double) = (Extent Double, Extent Double)
+  type TargetRange Albers (Double, Double) = ()
   data ScaleOptions Albers (Point Radians) (Double, Double) =
     AlbScale {
-      alArea :: (Point Radians, Point Radians), -- Area that should be mapped to the target area
       alReferencePoint :: Point Radians, -- reference point
       alPhi1 :: Radians, -- First standard parallel
       alPhi2 :: Radians -- Second standard parallel
     }
-  scale (AlbScale ex ref phi1 phi2) tgt x = Identity (xScale lng', yScale lt') where
-    -- mrd' = toRad mrd'
-    ((minLong', minLat'), (maxLong', maxLat')) =
-      bimap proj proj ex
-    ((minX, maxX), (minY, maxY)) =
-      bimap toTuple toTuple tgt
-    (lng', lt') = proj x
-    xScale = linear (minLong', maxLong') (minX, maxX)
-    yScale = linear (minLat', maxLat') (minY, maxY)
+  scale (AlbScale ref phi1 phi2) _ = Identity . proj where
     (refLong, refLat) = getPoint ref
 
     -- albers projection
@@ -125,3 +108,34 @@ instance Scalable Albers (Point Radians) (Double, Double) where
       rho = sqrt (c - 2 * n * sin lat) / n
       rho0 = sqrt (c - 2 * n * sin refLat) / n
 
+data MapScale (f :: * -> *) a
+
+-- | Scale the points of a map so that the "rectangle" specified by the two
+--   points maps to the target range.
+--
+--   NOTE: This does not preserve the aspect ratio (you need to ensure the
+--         target dimensions are correct)
+--
+mapScale ::
+  (Point Radians, Point Radians) -- ^ SW and NE corners of the source rectangle
+  -> (ScaleOptions f) (Point Radians) (Double, Double) -- ^ Inner scale
+  -> ScaleOptions (MapScale f) (Point Radians) (Double, Double)
+mapScale = MapScale
+
+instance (
+  Target f ~ Identity,
+  TargetRange f (Double, Double) ~ (),
+  Scalable f (Point Radians) (Double, Double)
+  ) => Scalable (MapScale f) (Point Radians) (Double, Double) where
+    type Target (MapScale f) = Identity
+    type TargetRange (MapScale f) (Double, Double) = (Extent Double, Extent Double)
+    data ScaleOptions (MapScale f) (Point Radians) (Double, Double) =
+      MapScale (Point Radians, Point Radians) ((ScaleOptions f) (Point Radians) (Double, Double))
+    scale (MapScale src opts) tgt = fmap (bimap xScale yScale) . scale' where
+      scale' = scale opts ()
+      (Identity (minLong', minLat'), Identity (maxLong', maxLat')) =
+        bimap scale' scale' src
+      ((minX, maxX), (minY, maxY)) =
+        bimap toTuple toTuple tgt
+      xScale = linear (minLong', maxLong') (minX, maxX)
+      yScale = linear (minLat', maxLat') (minY, maxY)
