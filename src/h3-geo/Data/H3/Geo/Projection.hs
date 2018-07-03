@@ -18,6 +18,9 @@ module Data.H3.Geo.Projection(
   mercator,
   NullMeridian(..),
   greenwich,
+  Albers,
+  albers,
+  albers',
   -- * Data constructors
   ScaleOptions(..)
   ) where
@@ -70,3 +73,55 @@ instance Scalable Mercator (Point Radians) (Double, Double) where
     -- mercator projection
     proj :: Point Radians -> (Double, Double)
     proj (Point (long, lat)) = bimap getRadians getRadians (long - mrd', asinh $ tan lat)
+
+-- | Albers projection (https://en.wikipedia.org/wiki/Albers_projection).
+-- Sensible values for first and second standard parallels are
+-- 20°N/50°N or 15°N/45°N
+albers ::
+     (Point Radians, Point Radians)  -- ^ Area that should be mapped to the target area
+  -> Point Radians -- ^ Reference point
+  -> Radians -- ^ First standard parallel
+  -> Radians -- ^ Second standard parallel
+  -> ScaleOptions Albers (Point Radians) (Double, Double)
+albers = AlbScale
+
+-- | Albers projection (https://en.wikipedia.org/wiki/Albers_projection) using
+--   15 and 45 degrees for the standard parallels.
+albers' ::
+     (Point Radians, Point Radians)  -- ^ Area that should be mapped to the target area
+  -> Point Radians -- ^ Reference point
+  -> ScaleOptions Albers (Point Radians) (Double, Double)
+albers' a b = AlbScale a b (toRad 15) (toRad 45)
+
+data Albers a
+
+instance Scalable Albers (Point Radians) (Double, Double) where
+  type Target Albers = Identity
+  type TargetRange Albers (Double, Double) = (Extent Double, Extent Double)
+  data ScaleOptions Albers (Point Radians) (Double, Double) =
+    AlbScale {
+      alArea :: (Point Radians, Point Radians), -- Area that should be mapped to the target area
+      alReferencePoint :: Point Radians, -- reference point
+      alPhi1 :: Radians, -- First standard parallel
+      alPhi2 :: Radians -- Second standard parallel
+    }
+  scale (AlbScale ex ref phi1 phi2) tgt x = Identity (xScale lng', yScale lt') where
+    -- mrd' = toRad mrd'
+    ((minLong', minLat'), (maxLong', maxLat')) =
+      bimap proj proj ex
+    ((minX, maxX), (minY, maxY)) =
+      bimap toTuple toTuple tgt
+    (lng', lt') = proj x
+    xScale = linear (minLong', maxLong') (minX, maxX)
+    yScale = linear (minLat', maxLat') (minY, maxY)
+    (refLong, refLat) = getPoint ref
+
+    -- albers projection
+    proj :: Point Radians -> (Double, Double)
+    proj (Point (long, lat)) = bimap getRadians getRadians (rho * sin theta, rho0 - rho * cos theta) where
+      n = (sin phi1 + sin phi2) / 2
+      theta = n * (long - refLong)
+      c = cos phi1 ^ (2 :: Integer) + 2 * n * sin phi1
+      rho = sqrt (c - 2 * n * sin lat) / n
+      rho0 = sqrt (c - 2 * n * sin refLat) / n
+

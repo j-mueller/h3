@@ -104,8 +104,21 @@ NullMeridian :: Degrees -> NullMeridian
 --   greenwich = NullMeridian 0
 --   </pre>
 greenwich :: NullMeridian
+data Albers a
+
+-- | Albers projection
+--   (https:/<i>en.wikipedia.org</i>wiki/Albers_projection). Sensible
+--   values for first and second standard parallels are 20°N<i>50°N or
+--   15°N</i>45°N
+albers :: (Point Radians, Point Radians) -> Point Radians -> Radians -> Radians -> ScaleOptions Albers (Point Radians) (Double, Double)
+
+-- | Albers projection
+--   (https:/<i>en.wikipedia.org</i>wiki/Albers_projection) using 15 and 45
+--   degrees for the standard parallels.
+albers' :: (Point Radians, Point Radians) -> Point Radians -> ScaleOptions Albers (Point Radians) (Double, Double)
 
 -- | Additional parameters for the scale (other than target range).
+instance Data.H3.Scalable.Scalable Data.H3.Geo.Projection.Albers (Data.H3.Geo.Types.Point Data.H3.Geo.Types.Radians) (GHC.Types.Double, GHC.Types.Double)
 instance Data.H3.Scalable.Scalable Data.H3.Geo.Projection.Mercator (Data.H3.Geo.Types.Point Data.H3.Geo.Types.Radians) (GHC.Types.Double, GHC.Types.Double)
 
 module Data.H3.Geo
