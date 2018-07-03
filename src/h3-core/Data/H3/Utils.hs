@@ -71,20 +71,20 @@ computeMidpoint f = total / count where
   cnt x = (Sum x, Sum 1)
 
 -- | Generate a value for an SVG "viewBox" attribute based on the extents of the
---   x- and y-axis. The viewbox will be 30% bigger than the dimensions tó leave
---  room for labels etc.
+--   x- and y-axis.
 viewBox :: (IsString s)
   => Extent Double -- extent of the x axis
   -> Extent Double -- extent of the y axis
   -> s
 viewBox mx my = fromString $
-  show (minVal - 0.15 * range) <> " " <> show (-0.15 * height) <> " " <>
-  show (1.3 * range) <>
+  show minX <> " " <> show minY <> " " <>
+  show range <>
   " " <>
-  show (1.3 * height)
+  show height
   where
     (Extent (Min by, Max ty)) = my
     (Extent (Min bx, Max tx)) = mx
     height = abs $ ty - by
     range = abs $ tx - bx
-    minVal = bx
+    minX = min bx tx
+    minY = min by ty

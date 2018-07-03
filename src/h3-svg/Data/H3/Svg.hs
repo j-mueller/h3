@@ -13,11 +13,14 @@
 --------------------------------------------------------------------
 module Data.H3.Svg(
   renderShape,
-  renderSvg
+  renderSvg,
+  renderSvg',
+  ViewBoxMode(..)
   ) where
 
 import           Data.Bifunctor    (Bifunctor (..))
-import           Data.H3.Extent    (Extent, toTuple)
+import           Data.H3.Extent    (Extent, resize, toTuple)
+import           Data.H3.Utils     (viewBox)
 import           Data.H3.Visuals
 import           Data.String       (IsString (..))
 import           Data.Text         (Text)
@@ -65,11 +68,23 @@ renderShape = go "black" "1.0" . fmap (bimap (Path.toText . getPixel) (Path.toTe
       ] (fromString lbl :: Element)
     AnOpacity opa sh -> go color (Text.pack $ show opa) sh
 
--- | Render a shape to an SVG document using the provided dimensions
-renderSvg :: ((Extent Double, Extent Double) -> Shape Text (Pixel Double, Pixel Double)) -> (Extent Double, Extent Double) -> Element
-renderSvg f dims = doctype <> with (svg11_ content) [Version_ <<- "1.1"] where
+-- | Whether to include a viewbox attribute in the generated SVG
+data ViewBoxMode = AddViewBox { vbScaleFactor :: Double } | NoViewBox
+
+-- | Render a shape to an SVG document using the provided dimensions,
+--   potentially adding a viewbox.
+renderSvg :: ViewBoxMode -> ((Extent Double, Extent Double) -> Shape Text (Pixel Double, Pixel Double)) -> (Extent Double, Extent Double) -> Element
+renderSvg vbm f dims = doctype <> with (svg11_ content) attrs where
   content = renderShape $ f dims
-  -- TODO: Viewport / width + height
+  attrs = (Version_ <<- "1.1") : case vbm of
+    AddViewBox scl ->
+      let dims' = bimap (resize scl) (resize scl) dims in
+      [ViewBox_ <<- uncurry viewBox dims']
+    NoViewBox  -> []
+
+-- | Render a shape to an SVG document using the provided dimensions
+renderSvg' :: ((Extent Double, Extent Double) -> Shape Text (Pixel Double, Pixel Double)) -> (Extent Double, Extent Double) -> Element
+renderSvg' = renderSvg $ AddViewBox 1.0
 
 mkPath :: [(Text, Text)] -> Text
 mkPath =

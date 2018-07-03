@@ -76,6 +76,10 @@ nicenum :: (Ord a, Num a, Fractional a, Floating a, RealFrac a) => RoundingMode 
 linear :: (Fractional a, Eq a) => (a, a) -> (a, a) -> a -> a
 computeMidpoint :: (Fractional x, Num x, Foldable1 f) => f x -> x
 
+-- | Generate a value for an SVG "viewBox" attribute based on the extents
+--   of the x- and y-axis.
+viewBox :: (IsString s) => Extent Double -> Extent Double -> s
+
 
 -- | A set of useful scales for visualising data. Each scale is identified
 --   by an empty data type (<a>Continuous</a>, <a>Ordinal</a> etc). To use
@@ -137,6 +141,10 @@ data Transformed (f :: * -> *) a
 --   domain
 anchored :: a -> ScaleOptions f a b -> ScaleOptions (Anchored f) a b
 data Anchored (f :: * -> *) a
+
+-- | Apply two scales to the same value
+split :: ScaleOptions f a b -> ScaleOptions g a c -> ScaleOptions (Split f g) a (b, c)
+data Split (f :: * -> *) (g :: * -> *) a
 newtype Pair a
 Pair :: (a, a) -> Pair a
 [getPair] :: Pair a -> (a, a)
@@ -145,6 +153,7 @@ Pair :: (a, a) -> Pair a
 class ProductV p
 
 -- | Additional parameters for the scale (other than target range).
+instance (Data.H3.Scalable.Scalable f a b, Data.H3.Scalable.Scalable g a c) => Data.H3.Scalable.Scalable (Data.H3.Scales.Split f g) a (b, c)
 instance (GHC.Base.Applicative (Data.H3.Scalable.Target f), Data.H3.Scalable.Scalable f a b) => Data.H3.Scalable.Scalable (Data.H3.Scales.Anchored f) a b
 instance (Data.H3.Scalable.Target f b ~ h b, GHC.Base.Functor h, Data.H3.Scalable.Scalable f a b) => Data.H3.Scalable.Scalable (Data.H3.Scales.Transformed f) a b
 instance (Data.H3.Scalable.Target g b ~ Data.H3.Scalable.TargetRange g b, Data.H3.Scalable.Target f b ~ Data.H3.Scalable.TargetRange g b, Data.H3.Scalable.Scalable f a b, Data.H3.Scalable.Scalable g c b) => Data.H3.Scalable.Scalable (Data.H3.Scales.Nested f g) (a, c) b

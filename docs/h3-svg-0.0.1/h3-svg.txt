@@ -15,5 +15,15 @@ module Data.H3.Svg
 -- | Render a <a>Shape</a> as an SVG <a>Element</a>
 renderShape :: Shape Text (Pixel Double, Pixel Double) -> Element
 
+-- | Render a shape to an SVG document using the provided dimensions,
+--   potentially adding a viewbox.
+renderSvg :: ViewBoxMode -> ((Extent Double, Extent Double) -> Shape Text (Pixel Double, Pixel Double)) -> (Extent Double, Extent Double) -> Element
+
 -- | Render a shape to an SVG document using the provided dimensions
-renderSvg :: ((Extent Double, Extent Double) -> Shape Text (Pixel Double, Pixel Double)) -> (Extent Double, Extent Double) -> Element
+renderSvg' :: ((Extent Double, Extent Double) -> Shape Text (Pixel Double, Pixel Double)) -> (Extent Double, Extent Double) -> Element
+
+-- | Whether to include a viewbox attribute in the generated SVG
+data ViewBoxMode
+AddViewBox :: Double -> ViewBoxMode
+[vbScaleFactor] :: ViewBoxMode -> Double
+NoViewBox :: ViewBoxMode

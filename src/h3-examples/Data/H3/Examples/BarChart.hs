@@ -15,7 +15,7 @@ import           Data.H3.Scalable        (Scalable (..))
 import           Data.H3.Scales          (IncludeZeroPolicy (..), Pair (..),
                                           Product (..), anchored, continuous,
                                           nested, ordinal, transformed)
-import           Data.H3.Svg             (renderSvg)
+import           Data.H3.Svg             (ViewBoxMode (..), renderSvg)
 import           Data.H3.Visuals         (ChartVisuals (..), FontSize (..),
                                           LabelOffset (..), Pixel (..),
                                           Shape (..), Vis (..),
@@ -102,5 +102,5 @@ barChartExample = do
              ("2017", (Bar ("a", 70), Bar ("b", 165))),
              ("2018", (Bar ("a", 70), Bar ("b", 165)))]
     dims = (fromTuple (0, 900), fromTuple (500, 0))
-    r    = renderSvg (mapColour Text.pack . plotBarChart brs) dims
+    r    = renderSvg (AddViewBox 1.1) (mapColour Text.pack . plotBarChart brs) dims
   TextIO.writeFile "out.svg" $ SVG.prettyText r

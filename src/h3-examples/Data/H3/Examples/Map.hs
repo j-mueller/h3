@@ -5,7 +5,7 @@ import           Data.H3.Geo.Projection  (greenwich, mercator)
 import           Data.H3.Geo.Shapefile   (loadShapeFromFile)
 import           Data.H3.Geo.Types       (Point (..), Polygon (..), WGS84 (..))
 import           Data.H3.Scalable        (Scalable (..))
-import           Data.H3.Svg             (renderSvg)
+import           Data.H3.Svg             (renderSvg')
 import           Data.H3.Visuals         (Pixel (..), Shape (..))
 
 import           Data.Bifunctor          (Bifunctor (..))
@@ -24,7 +24,7 @@ mapExample = do
       mkLine x = ALine . fmap (proj x) . NonEmpty.toList . getPolygon
       mkGroup x = AGroup $ fmap (mkLine x) (NonEmpty.toList shp)
       dims = (fromTuple (0, 930), fromTuple (1630, 0))
-      r = renderSvg mkGroup dims
+      r = renderSvg' mkGroup dims
   TextIO.writeFile "out.svg" $ SVG.prettyText r
 
 hlp :: (Extent Double, Extent Double) -> Extent WGS84

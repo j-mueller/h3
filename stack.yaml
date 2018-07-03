@@ -21,7 +21,7 @@ extra-deps:
 
 # concur not currently on hackage
 - git: git@github.com:j-mueller/concur.git
-  commit: 71ea66eb338425965edfdd65eb10c5a1fb833149
+  commit: b6656a1f067e25d392238aa24f48e4f7965ffabc
   subdirs:
   - concur-core
   - concur-react
