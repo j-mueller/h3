@@ -6,6 +6,11 @@ Extensible data visualisation in Haskell.
 
 ![docs/nest-bar-chart.png](docs/nest-bar-chart.png)
 
+# Examples
+
+The examples can be built with [nix](https://nixos.org/nix/). Run `nix-build -A examples.map` or `nix-build -A examples.bar-chart`. The output will be an SVG file in the symlinked folder `result`.
+
+
 # License
 
 MIT (see LICENSE file)

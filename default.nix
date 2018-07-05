@@ -21,7 +21,9 @@ let
   h3-svg = ./src/h3-svg/default.nix;
 
 in
-  {
+  rec {
+
+    inherit pkgs;
     
     ghc = pkgs.haskell.packages.ghc843.override {
       overrides = self: super: {
@@ -31,6 +33,7 @@ in
         format-numbers = pkgs.haskell.lib.dontCheck (super.format-numbers);
         ghcjs-base-stub = self.callPackage ./nix/ghcjs-base-stub.nix {};
         palette = self.callPackage ./nix/palette.nix {};
+        readshp = self.callPackage ./nix/readshp.nix {};
 
         h3-core = self.callPackage h3-core {  };
         h3-colour = self.callPackage h3-colour {  };
@@ -38,6 +41,23 @@ in
         h3-geo = self.callPackage h3-geo { };
         h3-svg = self.callPackage h3-svg { };
 
+      };
+    };
+
+    examples = {
+      
+      bar-chart = pkgs.stdenv.mkDerivation {
+        name = "h3-bar-chart-example";
+        src = ./examples/bar-chart;        
+        buildInputs = [(ghc.ghcWithPackages (pkgs: [ghc.h3-core ghc.h3-svg ghc.lens ghc.svg-builder ghc.h3-colour]))  ghc.runghc ];
+        installPhase = ''runghc Main.hs; mkdir -p $out; cp out.svg $out/out.svg'';
+      };
+
+      map = pkgs.stdenv.mkDerivation {
+        name = "h3-map-example";
+        src = ./examples/map;        
+        buildInputs = [(ghc.ghcWithPackages (pkgs: [ghc.h3-core ghc.h3-svg ghc.lens ghc.svg-builder ghc.h3-colour ghc.h3-geo ghc.filepath]))  ghc.runghc ];
+        installPhase = ''runghc Main.hs; mkdir -p $out; cp out.svg $out/out.svg'';
       };
     };
 
