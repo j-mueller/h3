@@ -14,14 +14,16 @@
 --------------------------------------------------------------------
 module Data.H3.Concur(
   renderShape,
-  renderSvg
+  renderSvg,
+  ViewBoxMode(..)
   ) where
 
 import           Concur.Core
 import           Concur.React
 import           Control.Applicative (Alternative (..))
 import           Data.Bifunctor      (Bifunctor (..))
-import           Data.H3.Extent      (toTuple)
+import           Data.H3.Extent      (Extent, resize, toTuple)
+import           Data.H3.Utils       (viewBox)
 import           Data.H3.Visuals     (FontSize (..), FontWeight (..),
                                       Pixel (..), Shape (..), TextAnchor (..))
 import           Data.List           (intersperse)
@@ -69,15 +71,22 @@ renderShape = go "black" "1.0" . fmap (bimap getPixel getPixel) where
         vattr "y" $ fromString y] (fromString lbl)
     AnOpacity opa sh -> go color (show opa) sh
 
+-- | Whether to include a viewbox attribute in the generated SVG
+data ViewBoxMode = AddViewBox { vbScaleFactor :: Double } | NoViewBox
+
 -- | Render a shape to a react SVG node using the provided dimensions
 renderSvg ::
-  ((Pixel String, Pixel String)
-  -> Shape String (Pixel String, Pixel String))
-  -> (Pixel String, Pixel String)
+  ViewBoxMode
+  -> ((Extent Double, Extent Double) -> Shape String (Pixel String, Pixel String))
+  -> (Extent Double, Extent Double)
   -> Widget HTML a
-renderSvg f dims = el "svg" [] [content] where
+renderSvg vbm f dims = el "svg" attrs [content] where
   content = renderShape $ f dims
-  -- TODO: Viewport / width + height
+  attrs = case vbm of
+    AddViewBox scl ->
+      let dims' = bimap (resize scl) (resize scl) dims in
+      [vattr "viewBox" $ uncurry viewBox dims']
+    NoViewBox  -> []
 
 -- | Create a @<text>@ node with some text.
 svgText ::
