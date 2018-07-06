@@ -289,12 +289,12 @@ instance (
 data Cartesian (f :: * -> *) (g :: * -> *) a
 
 cartesian ::
-     Extent d
-  -> Extent b
+     Extent d -- ^ Tick length of x-ticks
+  -> Extent b -- ^ Tick length of y-ticks
   -> FontSize String
-  -> LabelOffset (b, d)
-  -> ScaleOptions f a b
-  -> ScaleOptions g c d
+  -> LabelOffset (b, d) -- ^ Distance between axis and label
+  -> ScaleOptions f a b -- ^ Scale options for x axis
+  -> ScaleOptions g c d -- ^ Scale options for y axis
   -> ScaleOptions (Cartesian f g) (a, c) (b, d)
 cartesian = CardScaleOpts
 
