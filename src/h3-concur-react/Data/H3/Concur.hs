@@ -27,6 +27,7 @@ import           Data.H3.Utils       (viewBox)
 import           Data.H3.Visuals     (FontSize (..), FontWeight (..),
                                       Pixel (..), Shape (..), TextAnchor (..))
 import           Data.List           (intersperse)
+import           Data.Semigroup      (Semigroup (..))
 import           Data.String         (IsString (..))
 import           GHCJS.Types         (JSString)
 

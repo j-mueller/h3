@@ -55,6 +55,7 @@ import           Data.Bifunctor           (Bifunctor (..))
 import           Data.Functor.Identity    (Identity (..))
 import qualified Data.List.NonEmpty       as NonEmpty
 import           Data.Profunctor          (Profunctor (..))
+import           Data.Semigroup           (Semigroup (..))
 import           Data.String              (IsString (..))
 import qualified Data.Text                as Text
 import qualified Data.Text.Format.Numbers as F

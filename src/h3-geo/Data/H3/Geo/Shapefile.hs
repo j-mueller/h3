@@ -7,6 +7,7 @@ import           Data.H3.Geo.Types              (Degrees (..), Point (..),
 
 import           Data.List.NonEmpty             (NonEmpty, nonEmpty)
 import           Data.Maybe                     (catMaybes, fromMaybe)
+import           Data.Semigroup                 (Semigroup (..))
 import           Data.Semigroup.Foldable        (Foldable1 (..))
 import           Geometry.Shapefile.MergeShpDbf (readShpWithDbf)
 import           Geometry.Shapefile.ReadShp     (readShpFile)

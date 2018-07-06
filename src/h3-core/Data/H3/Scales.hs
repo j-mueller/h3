@@ -56,6 +56,7 @@ import           Data.List.NonEmpty      (NonEmpty)
 import qualified Data.List.NonEmpty      as NonEmpty
 import qualified Data.Map                as Map
 import           Data.Profunctor         (Profunctor (..))
+import           Data.Semigroup          ((<>))
 import           Data.Semigroup.Foldable (Foldable1 (..))
 import           Data.Void               (Void)
 

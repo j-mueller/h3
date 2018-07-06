@@ -13,35 +13,33 @@ let
 
   dontHaddock = pkgs.haskell.lib.dontHaddock;
 
-  h3-core = ./src/h3-core/default.nix;
-  h3-colour = ./src/h3-colour/default.nix;
-  h3-concur-react = ./src/h3-concur-react/default.nix;
-  h3-geo = ./src/h3-geo/default.nix;
-  h3-examples = ./src/h3-examples/default.nix;
-  h3-svg = ./src/h3-svg/default.nix;
+  ghc-imports = self: super: {
+
+    concur-core = self.callPackage ./nix/concur-core.nix {};
+    concur-react = self.callPackage ./nix/concur-react.nix {};
+    format-numbers = pkgs.haskell.lib.dontCheck (super.format-numbers);
+    ghcjs-base-stub = self.callPackage ./nix/ghcjs-base-stub.nix {};
+    palette = self.callPackage ./nix/palette.nix {};
+    readshp = self.callPackage ./nix/readshp.nix {};
+
+    h3-core = self.callPackage ./src/h3-core/default.nix {  };
+    h3-colour = self.callPackage ./src/h3-colour/default.nix {  };
+    h3-concur-react = self.callPackage ./src/h3-concur-react/default.nix { };
+    h3-geo = self.callPackage ./src/h3-geo/default.nix { };
+    h3-svg = self.callPackage ./src/h3-svg/default.nix { };
+
+  };
 
 in
   rec {
 
     inherit pkgs;
-    
-    ghc = pkgs.haskell.packages.ghc843.override {
-      overrides = self: super: {
-
-        concur-core = self.callPackage ./nix/concur-core.nix {};
-        concur-react = self.callPackage ./nix/concur-react.nix {};
-        format-numbers = pkgs.haskell.lib.dontCheck (super.format-numbers);
-        ghcjs-base-stub = self.callPackage ./nix/ghcjs-base-stub.nix {};
-        palette = self.callPackage ./nix/palette.nix {};
-        readshp = self.callPackage ./nix/readshp.nix {};
-
-        h3-core = self.callPackage h3-core {  };
-        h3-colour = self.callPackage h3-colour {  };
-        h3-concur-react = self.callPackage h3-concur-react { };
-        h3-geo = self.callPackage h3-geo { };
-        h3-svg = self.callPackage h3-svg { };
-
-      };
+        
+    ghc822 = pkgs.haskell.packages.ghc822.override {
+      overrides = ghc-imports;
+    };
+    ghc843 = pkgs.haskell.packages.ghc843.override {
+      overrides = ghc-imports;
     };
 
     examples = {
@@ -49,14 +47,14 @@ in
       bar-chart = pkgs.stdenv.mkDerivation {
         name = "h3-bar-chart-example";
         src = ./examples/bar-chart;        
-        buildInputs = [(ghc.ghcWithPackages (pkgs: [ghc.h3-core ghc.h3-svg ghc.lens ghc.svg-builder ghc.h3-colour]))  ghc.runghc ];
+        buildInputs = [(ghc843.ghcWithPackages (pkgs: [ghc843.h3-core ghc843.h3-svg ghc843.lens ghc843.svg-builder ghc843.h3-colour]))  ghc843.runghc ];
         installPhase = ''runghc Main.hs; mkdir -p $out; cp out.svg $out/out.svg'';
       };
 
       map = pkgs.stdenv.mkDerivation {
         name = "h3-map-example";
         src = ./examples/map;        
-        buildInputs = [(ghc.ghcWithPackages (pkgs: [ghc.h3-core ghc.h3-svg ghc.lens ghc.svg-builder ghc.h3-colour ghc.h3-geo ghc.filepath]))  ghc.runghc ];
+        buildInputs = [(ghc843.ghcWithPackages (pkgs: [ghc843.h3-core ghc843.h3-svg ghc843.lens ghc843.svg-builder ghc843.h3-colour ghc843.h3-geo ghc843.filepath]))  ghc843.runghc ];
         installPhase = ''runghc Main.hs; mkdir -p $out; cp out.svg $out/out.svg'';
       };
     };
