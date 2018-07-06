@@ -10,7 +10,8 @@ module Data.H3.Utils(
   ) where
 
 import           Data.List.NonEmpty      (NonEmpty (..))
-import           Data.Semigroup          (Max (..), Min (..), Sum (..))
+import           Data.Semigroup          (Max (..), Min (..), Semigroup (..),
+                                          Sum (..))
 import           Data.Semigroup.Foldable
 import           Data.String             (IsString (..))
 
