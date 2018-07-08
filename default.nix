@@ -71,6 +71,24 @@ in
         buildInputs = [(ghc843.ghcWithPackages (pkgs: packages)) ghc843.runghc];
         installPhase = ''runghc Main.hs; mkdir -p $out; cp out.svg $out/out.svg'';
       };
+      
+      osm = pkgs.stdenv.mkDerivation rec {
+        name = "h3-osm-example";
+        src = ./examples/osm;
+        packages = [
+          ghc843.aeson
+          ghc843.lens
+          ghc843.req
+          ghc843.svg-builder 
+          ghc843.filepath
+          ghc843.text
+          ghc843.h3-core 
+          ghc843.h3-svg 
+          ghc843.h3-colour 
+          ghc843.h3-geo ];
+        buildInputs = [(ghc843.ghcWithPackages (pkgs: packages))  ghc843.runghc ];
+        installPhase = "runghc Main.hs query.txt; mkdir -p $out;cp out.svg $out/out.svg";
+      };
     };
 
   }
