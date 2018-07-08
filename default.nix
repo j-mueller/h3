@@ -71,6 +71,13 @@ in
         buildInputs = [(ghc843.ghcWithPackages (pkgs: packages)) ghc843.runghc];
         installPhase = ''runghc Main.hs; mkdir -p $out; cp out.svg $out/out.svg'';
       };
+      
+      osm = pkgs.stdenv.mkDerivation {
+        name = "h3-osm-example";
+        src = pkgs.stdenv.fetchurl {
+          curlOpts = "-v";
+        }
+      }
     };
 
   }
