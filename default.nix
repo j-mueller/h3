@@ -57,6 +57,20 @@ in
         buildInputs = [(ghc843.ghcWithPackages (pkgs: [ghc843.h3-core ghc843.h3-svg ghc843.lens ghc843.svg-builder ghc843.h3-colour ghc843.h3-geo ghc843.filepath]))  ghc843.runghc ];
         installPhase = ''runghc Main.hs; mkdir -p $out; cp out.svg $out/out.svg'';
       };
+
+      plot = pkgs.stdenv.mkDerivation rec {
+        name = "h3-plot-example";
+        src = ./examples/plot;     
+        packages = [
+          ghc843.h3-core 
+          ghc843.h3-svg 
+          ghc843.lens 
+          ghc843.statistics
+          ghc843.svg-builder 
+          ghc843.h3-colour];
+        buildInputs = [(ghc843.ghcWithPackages (pkgs: packages)) ghc843.runghc];
+        installPhase = ''runghc Main.hs; mkdir -p $out; cp out.svg $out/out.svg'';
+      };
     };
 
   }
