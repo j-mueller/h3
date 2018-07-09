@@ -33,6 +33,8 @@ data OverpassNode = OverpassNode {
 
 instance FromJSON OverpassNode
 
+-- node, way, relation https://wiki.openstreetmap.org/wiki/Elements
+
 
 main :: IO ()
 main = runReq def $ do
