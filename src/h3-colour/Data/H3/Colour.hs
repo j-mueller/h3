@@ -36,24 +36,25 @@ data OrdinalColours a
 
 -- | Create a scale that maps discrete values to colours. Colours will repeat
 --   if there are more than 12 different values.
-ordinalColours :: [a] -> ScaleOptions OrdinalColours a (Colour Double)
-ordinalColours = flip OrdColourScaleOptions black
+--
+ordinalColours ::
+  [a] -- ^ Values that are to be mapped to colours
+  -> ScaleOptions OrdinalColours a (Colour Double)
+ordinalColours as = OrdColourScaleOptions as black (paletteFor Qualitative $ length as)
 
 instance (Ord a, Eq a) => Scalable OrdinalColours a (Colour Double) where
   type Target OrdinalColours = Identity
   type TargetRange OrdinalColours (Colour Double) = ()
   data ScaleOptions OrdinalColours a (Colour Double) =
     OrdColourScaleOptions
-      [a]
-      (Colour Double)
-  scale (OrdColourScaleOptions ex k) _ = scMap where
-    n  = length ex
-    pl = paletteFor Qualitative n
+      [a] -- ^ Known values that are to be mapped to colours
+      (Colour Double) -- ^ Default colour for unknown values
+      [Colour Double] -- ^ List of colours for known values
+  scale (OrdColourScaleOptions ex k pl) _ = scMap where
     theMap = Map.fromList
       $ zip ex
       $ cycle pl
     scMap av = Identity $ Map.findWithDefault k av theMap
-
 
 data PaletteType =
   Sequential
@@ -68,7 +69,7 @@ paletteFor pt i = brewerSet cat i' where
   (cat, i') = case pt of
     Sequential  -> (Greens, clamp (3, 9) i)
     Diverging   -> (PiYG, clamp (3, 11) i)
-    Qualitative -> (Dark2, clamp (3, 8) i)
+    Qualitative -> (Paired, clamp (3, 12) i)
   clamp (mn, mx) n = max mn (min mx n)
 
 -- | Convert a colour to hexadecimal form so that it can be used in style
