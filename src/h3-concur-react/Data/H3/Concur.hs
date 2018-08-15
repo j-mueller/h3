@@ -15,6 +15,7 @@
 module Data.H3.Concur(
   renderShape,
   renderSvg,
+  renderSvg',
   ViewBoxMode(..)
   ) where
 
@@ -81,13 +82,23 @@ renderSvg ::
   -> ((Extent Double, Extent Double) -> Shape String (Pixel String, Pixel String))
   -> (Extent Double, Extent Double)
   -> Widget HTML a
-renderSvg vbm f dims = el "svg" attrs [content] where
+renderSvg = renderSvg' []
+
+-- | Render a shape to a react SVG node using the provided dimensions and
+--   additional attributes.
+renderSvg' ::
+  [VAttr]
+  -> ViewBoxMode
+  -> ((Extent Double, Extent Double) -> Shape String (Pixel String, Pixel String))
+  -> (Extent Double, Extent Double)
+  -> Widget HTML a
+renderSvg' as vbm f dims = el "svg" attrs [content] where
   content = renderShape $ f dims
   attrs = case vbm of
     AddViewBox scl ->
       let dims' = bimap (resize scl) (resize scl) dims in
-      [vattr "viewBox" $ uncurry viewBox dims']
-    NoViewBox  -> []
+      vattr "viewBox" (uncurry viewBox dims'):as
+    NoViewBox  -> as
 
 -- | Create a @<text>@ node with some text.
 svgText ::
