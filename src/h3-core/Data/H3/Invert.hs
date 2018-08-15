@@ -34,6 +34,8 @@ import           Data.H3.Scales          (Anchored, Cardinal, Continuous,
                                           ScaleOptions (..), Transformed)
 import           Data.H3.Utils           (computeMidpoint, defaultLabelCount,
                                           linear, looseLabels)
+import           Data.H3.Visuals         (Cartesian, NoGrid, NoLabels, NoTicks,
+                                          NoVisuals, ScaleOptions (..))
 
 -- | The class of scales that can be inverted.
 class Scalable f a b => Invertible f a b where
@@ -117,3 +119,23 @@ instance (
   Invertible f a b) => Invertible (Anchored f) a b where
     invert (AnchoredOpts _ opts) tgt =
       invert opts tgt . fmap (snd . getPair) . getCompose
+
+instance Invertible f a b => Invertible (NoGrid f) a b where
+  invert (NoGrid o) = invert o
+
+instance Invertible f a b => Invertible (NoVisuals f) a b where
+  invert (NoVisuals o) = invert o
+
+instance Invertible f a b => Invertible (NoLabels f) a b where
+  invert (NoLabels o) = invert o
+
+instance Invertible f a b => Invertible (NoTicks f) a b where
+  invert (NoTicks o) = invert o
+
+instance (
+  Invertible f a b,
+  Invertible g c d) => Invertible (Cartesian f g) (a, c) (b, d) where
+    invert (CardScaleOpts _ _ _ _ fa ga) (ltgt, rtgt) (Product (l, r)) =
+      (,) <$> il l <*> ir r where
+        il = invert fa ltgt
+        ir = invert ga rtgt
