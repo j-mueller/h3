@@ -45,6 +45,10 @@ module Data.H3.Visuals(
   NoGrid,
   noVisuals,
   NoVisuals,
+  noLabels,
+  NoLabels,
+  noTicks,
+  NoTicks,
   cartesian,
   Cartesian,
   -- * Constructors
@@ -175,6 +179,30 @@ class ChartVisuals c a b where
 newtype Vis a = Vis a
   deriving (Eq, Ord, Show, Functor, Foldable, Traversable)
 
+data NoLabels (f :: * -> *) a
+
+-- | Remove the labels from a scale
+noLabels :: ScaleOptions f a b -> ScaleOptions (NoLabels f) a b
+noLabels = NoLabels
+
+instance Scalable f a b => Scalable (NoLabels f) a b where
+  type Target (NoLabels f) = Target f
+  type TargetRange (NoLabels f) b = TargetRange f b
+  data ScaleOptions (NoLabels f) a b = NoLabels ((ScaleOptions f) a b)
+  scale (NoLabels opts) = scale opts
+
+data NoTicks (f :: * -> *) a
+
+-- | Remove the ticks from a scale
+noTicks :: ScaleOptions f a b -> ScaleOptions (NoTicks f) a b
+noTicks = NoTicks
+
+instance Scalable f a b => Scalable (NoTicks f) a b where
+  type Target (NoTicks f) = Target f
+  type TargetRange (NoTicks f) b = TargetRange f b
+  data ScaleOptions (NoTicks f) a b = NoTicks ((ScaleOptions f) a b)
+  scale (NoTicks o) = scale o
+
 data NoGrid (f :: * -> *) a
 
 noGrid :: ScaleOptions f a b -> ScaleOptions (NoGrid f) a b
@@ -268,6 +296,20 @@ instance (
   => ChartVisuals (Vis (ScaleOptions (NoGrid f) a b)) h b where
     visuals (Vis (NoGrid o)) tgt = VisualElements tcks ax [] lbl lgd where
       VisualElements tcks ax _ lbl lgd = visuals (Vis o) tgt
+
+instance (
+  h ~ TargetRange f b,
+  ChartVisuals (Vis (ScaleOptions f a b)) h b)
+  => ChartVisuals (Vis (ScaleOptions (NoTicks f) a b)) h b where
+    visuals (Vis (NoTicks o)) tgt = VisualElements [] ax gr lbl lgd where
+      VisualElements _ ax gr lbl lgd = visuals (Vis o) tgt
+
+instance (
+  h ~ TargetRange f b,
+  ChartVisuals (Vis (ScaleOptions f a b)) h b)
+  => ChartVisuals (Vis (ScaleOptions (NoLabels f) a b)) h b where
+    visuals (Vis (NoLabels o)) tgt = VisualElements tcks ax gr [] lgd where
+      VisualElements tcks ax gr _ lgd = visuals (Vis o) tgt
 
 instance (
   h ~ TargetRange f b,
