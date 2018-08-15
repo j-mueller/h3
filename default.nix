@@ -19,6 +19,7 @@ let
     concur-react = self.callPackage ./nix/concur-react.nix {};
     format-numbers = pkgs.haskell.lib.dontCheck (super.format-numbers);
     ghcjs-base-stub = self.callPackage ./nix/ghcjs-base-stub.nix {};
+    IntervalMap = self.callPackage ./nix/IntervalMap.nix {};
     palette = self.callPackage ./nix/palette.nix {};
     readshp = self.callPackage ./nix/readshp.nix {};
 

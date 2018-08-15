@@ -39,6 +39,7 @@ module Data.H3.Scales(
   nested,
   Nested,
   transformed,
+  transformed',
   Transformed,
   anchored,
   Anchored,
@@ -216,7 +217,15 @@ data Transformed (f :: * -> *) a
 
 -- | Map the results of a scale monomorphically.
 transformed :: (Target f b -> Target f b) -> (ScaleOptions f) a b -> ScaleOptions (Transformed f) a b
-transformed = TransformedOpts
+transformed f = TransformedOpts f (const Nothing)
+
+-- | Map the results of a scale monomorphically, and give an inverse.
+transformed' ::
+  (Target f b -> Target f b)
+  -> (Target f b -> Maybe (Target f b))
+  -> (ScaleOptions f) a b
+  -> ScaleOptions (Transformed f) a b
+transformed' = TransformedOpts
 
 instance (
   Target f b ~ h b,
@@ -224,8 +233,8 @@ instance (
   Scalable f a b) => Scalable (Transformed f) a b where
     type Target (Transformed f) = Target f
     type TargetRange (Transformed f) b = TargetRange f b
-    data ScaleOptions (Transformed f) a b = TransformedOpts (Target f b -> Target f b) ((ScaleOptions f) a b)
-    scale (TransformedOpts f o) tgt = f <$> scale o tgt
+    data ScaleOptions (Transformed f) a b = TransformedOpts (Target f b -> Target f b) (Target f b -> Maybe (Target f b)) ((ScaleOptions f) a b)
+    scale (TransformedOpts f _ o) tgt = f <$> scale o tgt
 
 data Anchored (f :: * -> *) a
 

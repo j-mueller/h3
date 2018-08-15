@@ -321,7 +321,7 @@ instance (
   h ~ TargetRange f b,
   ChartVisuals (Vis (ScaleOptions f a b)) h b)
   => ChartVisuals (Vis (ScaleOptions (Transformed f) a b)) h b where
-    visuals (Vis (TransformedOpts _ o)) = visuals (Vis o)
+    visuals (Vis (TransformedOpts _ _ o)) = visuals (Vis o)
 
 instance (
   h ~ TargetRange f b,

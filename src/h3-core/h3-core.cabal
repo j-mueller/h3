@@ -23,6 +23,7 @@ library
   exposed-modules:
     Data.H3,
     Data.H3.Extent,
+    Data.H3.Invert,
     Data.H3.Scalable,
     Data.H3.Scales,
     Data.H3.Visuals,
@@ -31,6 +32,7 @@ library
     base,
     containers,
     format-numbers,
+    IntervalMap >= 0.6.0.0,
     profunctors,
     semigroups,
     semigroupoids,

@@ -3,7 +3,9 @@
 {-# LANGUAGE DeriveGeneric              #-}
 {-# LANGUAGE DeriveTraversable          #-}
 {-# LANGUAGE ExplicitForAll             #-}
+{-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE MultiParamTypeClasses      #-}
 module Data.H3.Extent(
   Extent(..),
   _Extent,
@@ -13,16 +15,22 @@ module Data.H3.Extent(
   resize
   ) where
 
-import           Data.Profunctor         (Profunctor (..))
-import           Data.Semigroup          (Max (..), Min (..), Semigroup (..))
-import           Data.Semigroup.Foldable (Foldable1 (..))
-import           GHC.Generics            (Generic)
+import           Data.IntervalMap.Generic.Interval (Interval (..))
+import           Data.Profunctor                   (Profunctor (..))
+import           Data.Semigroup                    (Max (..), Min (..),
+                                                    Semigroup (..))
+import           Data.Semigroup.Foldable           (Foldable1 (..))
+import           GHC.Generics                      (Generic)
 
 newtype Extent a = Extent { getExtent :: (Min a, Max a) }
   deriving (Eq, Ord, Show, Functor, Semigroup, Generic, Foldable, Traversable)
 
 instance Foldable1 Extent where
   fold1 (Extent (Min l, Max r)) = l <> r
+
+instance Ord a => Interval (Extent a) a where
+  lowerBound = fst . toTuple
+  upperBound = snd . toTuple
 
 _Extent :: forall p f a b. (Profunctor p, Functor f) => p (Extent a) (f (Extent b)) -> p (a, a) (f (b, b))
 _Extent = dimap fromTuple (fmap toTuple)
