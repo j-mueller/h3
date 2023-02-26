@@ -88,7 +88,7 @@ in
           ghc843.h3-colour 
           ghc843.h3-geo ];
         buildInputs = [(ghc843.ghcWithPackages (pkgs: packages))  ghc843.runghc ];
-        installPhase = "runghc Main.hs query.txt; mkdir -p $out;cp out.svg $out/out.svg";
+        installPhase = "runghc Main.hs query.overpassql; mkdir -p $out;cp out.svg $out/out.svg";
       };
     };
 
